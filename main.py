@@ -291,15 +291,19 @@ def login():
 
     if(username == "admin" and password == "admin"):
         access_token = create_access_token(identity=username)
-        return jsonify({"msg": "Login Successfully", "role": "admin", "access_token": access_token.decode('UTF-8')})
+        return jsonify({"msg": "Login Successfully", "role": "admin", "access_token": access_token})
 
     response = select_all_data("select * from team")
+    if(not response["success"]):
+        return jsonify({"msg": "Database Error", "error_msg": response["error_msg"], "success": False})
     for row in response["data"]:
         if username == row[1] and password == row[2]:
             access_token = create_access_token(identity=username)
-            return jsonify({"msg": "Login Successfully", "role": "team", "access_token": access_token.decode('UTF-8')})
+            return jsonify({"msg": "Login Successfully", "role": "team", "access_token": access_token})
 
     response = select_all_data("select * from volunteer")
+    if (not response["success"]):
+        return jsonify({"msg": "Database Error", "error_msg": response["error_msg"], "success": False})
     for row in response["data"]:
         if username == row[1] and password == row[2]:
             access_token = create_access_token(identity=username)
