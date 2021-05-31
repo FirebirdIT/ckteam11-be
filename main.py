@@ -274,24 +274,30 @@ def team_register():
 
 @app.route("/login", methods=["POST"])
 def login():
-    username = request.json.get("username", None)
-    password = request.json.get("password", None)
+    try:
+        username = request.json.get("username", None)
+        if (username == None):
+            return jsonify({"msg": "username missing", "success": False})
+    except:
+        return jsonify({"msg": "username missing", "success": False})
 
-    if(username == None):
-        return jsonify({"msg": "Username Missing", "success": False})
+    try:
+        password = request.json.get("password", None)
+        if (password == None):
+            return jsonify({"msg": "password missing", "success": False})
+    except:
+        return jsonify({"msg": "password missing", "success": False})
 
-    if (password == None):
-        return jsonify({"msg": "Password Missing", "success": False})
 
     if(username == "admin" and password == "admin"):
         access_token = create_access_token(identity=username)
-        return jsonify({"msg": "Login Successfully", "role": "admin", "access_token": access_token})
+        return jsonify({"msg": "Login Successfully", "role": "admin", "access_token": access_token.decode('UTF-8')})
 
     response = select_all_data("select * from team")
     for row in response["data"]:
         if username == row[1] and password == row[2]:
             access_token = create_access_token(identity=username)
-            return jsonify({"msg": "Login Successfully", "role": "team", "access_token": access_token})
+            return jsonify({"msg": "Login Successfully", "role": "team", "access_token": access_token.decode('UTF-8')})
 
     response = select_all_data("select * from volunteer")
     for row in response["data"]:
@@ -300,6 +306,42 @@ def login():
             return jsonify({"msg": "Login Successfully", "role": "volunteer", "access_token": access_token})
 
     return jsonify({"msg": "Invalid username or password"}), 401
+
+@app.route("/team/<username>", methods=["GET"])
+#@jwt_required()
+def team_retrieve_info(username):
+    response = select_one_data("SELECT * FROM team WHERE username=?", (username,))
+    if(response["success"]):
+        if(response["data"] == None):
+            return jsonify({"msg": "Team Not Exist", "success": False})
+        js = {
+            "username": username,
+            "display_name": response["data"][3],
+            "address": response["data"][4],
+            "phone_no": response["data"][5]
+        }
+        return jsonify({"data": js, "success": True})
+    else:
+        return jsonify({"msg": "Database Error", "error_msg": response["error_msg"], "success": False})
+
+@app.route("/volunteer/<username>", methods=["GET"])
+#@jwt_required()
+def volunteer_retrieve_info(username):
+    response = select_one_data("SELECT * FROM volunteer WHERE username=?", (username,))
+    if(response["success"]):
+        if(response["data"] == None):
+            return jsonify({"msg": "Volunteer Not Exist", "success": False})
+        js = {
+            "username": username,
+            "display_name": response["data"][3],
+            "address": response["data"][4],
+            "phone_no": response["data"][5],
+            "ic": response["data"][6],
+            "team": response["data"][7]
+        }
+        return jsonify({"data": js, "success": True})
+    else:
+        return jsonify({"msg": "Database Error", "error_msg": response["error_msg"], "success": False})
 
 @app.route("/test", methods=["GET"])
 #@jwt_required()
