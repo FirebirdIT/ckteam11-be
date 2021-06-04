@@ -347,10 +347,142 @@ def volunteer_retrieve_info(username):
     else:
         return jsonify({"msg": "Database Error", "error_msg": response["error_msg"], "success": False})
 
-@app.route("/test", methods=["GET"])
+@app.route("/user-list", methods=["GET"])
+#@jwt_required()
+def user_lst():
+    main_list=[]
+    response_team = select_all_data("SELECT * FROM team")
+    if(response_team["success"]):
+        if(response_team["data"] != None):
+            for team in response_team["data"]:
+                response_volunteer = select_all_data("SELECT * FROM volunteer WHERE team=?", (team[1],))
+                print("LOG", response_volunteer)
+                if(response_volunteer["success"]):
+                    json = {
+                        "username": team[1],
+                        "password": team[2],
+                        "display_name": team[3],
+                        "address": team[4],
+                        "phone_no": team[5],
+                        "volunteer": []
+                    }
+                    if (response_volunteer["data"] != None):
+                        for volunteer in response_volunteer["data"]:
+                            js = {
+                                "username": volunteer[1],
+                                "password": volunteer[2],
+                                "display_name": volunteer[3],
+                                "address": volunteer[4],
+                                "phone_no": volunteer[5],
+                                "ic": volunteer[6]
+                            }
+                            json["volunteer"].append(js)
+                        main_list.append(json)
+                    else:
+                        main_list.append(json)
+                else:
+                    return jsonify({"msg": "Database Error", "error_msg": response_volunteer["error_msg"], "success": False})
+            return jsonify({"msg": "Data Retrieve Successfully", "data": main_list, "success": True})
+    else:
+        return jsonify({"msg": "Database Error", "error_msg": response_team["error_msg"], "success": False})
+
+@app.route("/donation-list/volunteer", methods=["GET"])
+#@jwt_required()
+def volunteer_donation_list():
+    main_list = []
+    response = select_all_data("SELECT * FROM volunteer")
+    if(response["success"]):
+        if(response["data"] != None):
+            volunteer_list = []
+            for volunteer in response["data"]:
+                volunteer_list.append(volunteer[1])
+
+            sql = ""
+            for vol in volunteer_list:
+                sql += f" username='{vol}' OR "
+            response = select_all_data(
+                f"SELECT * FROM report WHERE {sql[1:-3]}")
+
+            if(response["success"]):
+                if(response["data"] != None):
+                    for details in response["data"]:
+                        js = {
+                            "datetime": details[1],
+                            "customer_name": details[2],
+                            "amount": details[3],
+                            "description": details[4],
+                            "username": details[5]
+                        }
+                        main_list.append(js)
+                    return jsonify({"msg": "Data Retrieve Successfully", "data": main_list, "success": True})
+                else:
+                    return jsonify({"msg": "Data Retrieve Successfully", "data": [], "success": True})
+            else:
+                return jsonify({"msg": "Database Error", "error_msg": response["error_msg"], "success": False})
+    else:
+        return jsonify({"msg": "Database Error", "error_msg": response["error_msg"], "success": False})
+
+@app.route("/donation-list/team", methods=["GET"])
+#@jwt_required()
+def team_donation_list():
+    main_list = []
+    response = select_all_data("SELECT * FROM team")
+    if(response["success"]):
+        if(response["data"] != None):
+            team_list = []
+            for team in response["data"]:
+                team_list.append(team[1])
+
+            sql = ""
+            for vol in team_list:
+                sql += f" username='{vol}' OR "
+            response = select_all_data(
+                f"SELECT * FROM report WHERE {sql[1:-3]}")
+
+            if(response["success"]):
+                if(response["data"] != None):
+                    for details in response["data"]:
+                        js = {
+                            "datetime": details[1],
+                            "customer_name": details[2],
+                            "amount": details[3],
+                            "description": details[4],
+                            "username": details[5]
+                        }
+                        main_list.append(js)
+                    return jsonify({"msg": "Data Retrieve Successfully", "data": main_list, "success": True})
+                else:
+                    return jsonify({"msg": "Data Retrieve Successfully", "data": [], "success": True})
+            else:
+                return jsonify({"msg": "Database Error", "error_msg": response["error_msg"], "success": False})
+    else:
+        return jsonify({"msg": "Database Error", "error_msg": response["error_msg"], "success": False})
+
+@app.route("/donation-list", methods=["GET"])
+#@jwt_required()
+def donation_list():
+    main_list = []
+    response = select_all_data("SELECT * FROM report")
+    if(response["success"]):
+        if(response["data"] == None):
+            return jsonify({"data": [], "success": True})
+        for details in response["data"]:
+            js = {
+                "datetime": details[1],
+                "customer_name": details[2],
+                "amount": details[3],
+                "description": details[4],
+                "username": details[5]
+            }
+            main_list.append(js)
+        return jsonify({"data": main_list, "success": True})
+    else:
+        return jsonify({"msg": "Database Error", "error_msg": response["error_msg"], "success": False})
+
+@app.route("/health", methods=["GET"])
 #@jwt_required()
 def test():
-    return "HELLO WORLD"
+    return "Connection Established!"
 
 if __name__ == "__main__":
     app.run(debug=True)
