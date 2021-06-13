@@ -1,3 +1,4 @@
+import os
 from flask import Flask
 from flask import jsonify
 from flask import request
@@ -11,6 +12,8 @@ from flask_jwt_extended import JWTManager
 
 import sqlite3
 
+from werkzeug.utils import secure_filename
+
 from datetime import datetime, timedelta
 
 app = Flask(__name__)
@@ -21,6 +24,8 @@ app.config["JWT_SECRET_KEY"] = "super-secret"
 jwt = JWTManager(app)
 
 DATABASE_PATH = "database.sqlite"
+ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg'])
+LOGO_ROOT = "logo"
 
 ## Database
 def insert_data(sql, value = None):
@@ -91,6 +96,10 @@ def delete_data(sql):
     except Exception as e:
         print(e)
         return {"msg": "Data Delete Failed", "success": False, "error_msg": str(e)}
+
+def allowed_file(filename):
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 @app.route("/donation", methods=["POST"])
 def donation():
@@ -219,39 +228,77 @@ def volunteer_register():
 @app.route("/team/register", methods=["POST"])
 def team_register():
     try:
-        username = request.json.get("username")
+        username = request.form['username']
         if (username == None):
             return jsonify({"msg": "Username Missing", "success": False})
     except:
         return jsonify({"msg": "Username Missing", "success": False})
 
     try:
-        password = request.json.get("password")
+        password = request.form['password']
         if (password == None):
             return jsonify({"msg": "Password Missing", "success": False})
     except:
         return jsonify({"msg": "password Missing", "success": False})
 
     try:
-        display_name = request.json.get("display_name")
-        if (display_name == None):
-            return jsonify({"msg": "display_name Missing", "success": False})
+        english_name = request.form['english_name']
+        if (english_name == None):
+            return jsonify({"msg": "english_name Missing", "success": False})
     except:
-        return jsonify({"msg": "display_name Missing", "success": False})
+        return jsonify({"msg": "english_name Missing", "success": False})
 
     try:
-        address = request.json.get("address")
+        address = request.form['address']
         if (address == None):
             return jsonify({"msg": "address Missing", "success": False})
     except:
         return jsonify({"msg": "address Missing", "success": False})
 
     try:
-        phone_no = request.json.get("phone_no")
+        phone_no = request.form['phone_no']
         if (phone_no == None):
             return jsonify({"msg": "phone_no Missing", "success": False})
     except:
         return jsonify({"msg": "phone_no Missing", "success": False})
+
+    try:
+        chinese_name = request.form['chinese_name']
+        if (chinese_name == None):
+            return jsonify({"msg": "chinese_name Missing", "success": False})
+    except:
+        return jsonify({"msg": "chinese_name Missing", "success": False})
+
+    try:
+        malay_name = request.form['malay_name']
+        if (malay_name == None):
+            return jsonify({"msg": "malay_name Missing", "success": False})
+    except:
+        return jsonify({"msg": "malay_name Missing", "success": False})
+
+    try:
+        team_ssm_id = request.form['team_ssm_id']
+        if (team_ssm_id == None):
+            return jsonify({"msg": "team_ssm_id Missing", "success": False})
+    except:
+        return jsonify({"msg": "team_ssm_id Missing", "success": False})
+
+    try:
+        logo_file = request.files.get('logo_file')
+        if (logo_file == None):
+            return jsonify({"msg": "logo_file Missing", "success": False})
+    except:
+        return jsonify({"msg": "logo_file Missing", "success": False})
+
+    if logo_file.filename == '':
+        return jsonify({"msg": "no selected file", "success": False})
+
+    if not allowed_file(logo_file.filename):
+        return jsonify({"msg": "only support jpg, jpeg, png format", "success": False})
+
+    ## Save Image
+    filename = secure_filename(logo_file.filename)
+    logo_file.save(os.path.join(LOGO_ROOT, filename))
 
     ## Check Username
     response = select_all_data("SELECT username FROM team UNION ALL SELECT username FROM volunteer")
@@ -264,8 +311,8 @@ def team_register():
         return jsonify({"msg": "Username Checking Failed", "success": False})
 
     response = insert_data('''
-        INSERT INTO team(username,password,display_name, address, phone_no)VALUES(?,?,?,?,?)
-    ''', (username, password, display_name, address, phone_no))
+        INSERT INTO team(username,password,english_name, address, phone_no, logo_path, chinese_name, malay_name, team_ssm_id)VALUES(?,?,?,?,?,?,?,?,?)
+    ''', (username, password, english_name, address, phone_no, os.path.join(LOGO_ROOT, filename), chinese_name, malay_name, team_ssm_id,))
 
     if(response["success"]):
         return jsonify({"msg": "{} registered successfully".format(username), "success": response["success"]})
