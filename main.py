@@ -2,19 +2,20 @@ import os
 from flask import Flask
 from flask import jsonify
 from flask import request
-
 from flask_cors import CORS
-
 from flask_jwt_extended import create_access_token
 from flask_jwt_extended import get_jwt_identity
 from flask_jwt_extended import jwt_required
 from flask_jwt_extended import JWTManager
-
 import sqlite3
-
 from werkzeug.utils import secure_filename
-
 from datetime import datetime, timedelta
+
+import smtplib
+from email.message import EmailMessage
+from email.mime.application import MIMEApplication
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
 
 app = Flask(__name__)
 CORS(app, support_credentials=True)
@@ -26,6 +27,31 @@ jwt = JWTManager(app)
 DATABASE_PATH = "database.sqlite"
 ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg'])
 LOGO_ROOT = "logo"
+
+## Email
+def send_smail(english_name, customer_email):
+    msg = MIMEMultipart()
+    msg['Subject'] = 'Donation Receipt'
+    msg['From'] = str(english_name)
+    msg['To'] = str(customer_email)
+
+    body = "<p>Here's the receipt. Thanks for your donation.</p>"
+    msgText = MIMEText('<b>%s</b>' % (body), 'html')
+    msg.attach(msgText)
+
+    filename = "1.pdf"
+    with open(filename, "rb") as f:
+        attach = MIMEApplication(f.read(), _subtype="pdf")
+    attach.add_header('Content-Disposition', 'attachment', filename=str(filename))
+    msg.attach(attach)
+    server = smtplib.SMTP_SSL('smtp.gmail.com', 465)
+    server.login("chrisliang183@gmail.com", "Hansheng0512#")
+    try:
+        server.send_message(msg)
+        server.quit()
+    except:
+        return False
+    return True
 
 ## Database
 def insert_data(sql, value = None):
@@ -138,6 +164,7 @@ def donation():
         ''', (donation_date, customer_name, amount, description, username))
 
     if(response["success"]):
+        send_smail("TEST", "hanshengliang@outlook.com")
         return jsonify({"msg": "Record Successfully", "success": response["success"]})
     else:
         return jsonify({"msg": "Record Failed", "success": response["success"]})
@@ -334,7 +361,6 @@ def login():
             return jsonify({"msg": "password missing", "success": False})
     except:
         return jsonify({"msg": "password missing", "success": False})
-
 
     if(username == "admin" and password == "admin"):
         access_token = create_access_token(identity=username)
