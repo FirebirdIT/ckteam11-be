@@ -1,5 +1,5 @@
 import os
-from flask import Flask
+from flask import Flask, send_from_directory
 from flask import jsonify
 from flask import request
 from flask_cors import CORS
@@ -17,6 +17,9 @@ from email.mime.application import MIMEApplication
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
+from fpdf import FPDF
+import subprocess
+
 app = Flask(__name__)
 CORS(app, support_credentials=True)
 
@@ -24,22 +27,205 @@ CORS(app, support_credentials=True)
 app.config["JWT_SECRET_KEY"] = "super-secret"
 jwt = JWTManager(app)
 
+# DATABASE_PATH = "/home/ubuntu/ckteam-backend/database.sqlite"
+# ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg'])
+# LOGO_ROOT = "/home/ubuntu/ckteam-backend/logo"
+# FONT_PATH = '/home/ubuntu/ckteam-backend/font/unifont/'
+# PDF_PATH = "/home/ubuntu/ckteam-backend"
+# ASSEST_PATH = "/home/ubuntu/ckteam-backend/assest"
+
 DATABASE_PATH = "database.sqlite"
 ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg'])
 LOGO_ROOT = "logo"
+FONT_PATH = 'font/unifont/'
+PDF_PATH = "pdf"
+ASSEST_PATH = "assest"
+
+from random import randint
+
+## PDF Generation
+def generate_pdf(data):
+    os.system("pwd")
+    subprocess.call(["php", "tfpdf.php"], shell=True)
+
+    pdf = FPDF('P', 'in', 'A4');
+    pdf.add_page()
+
+    # Chinese font
+    pdf.add_font('Simsun', '', os.path.join(FONT_PATH, "SIMSUN.ttf"), uni=True)
+
+    pdf.set_margins(0, 0, 0)
+    pdf.ln(3.75)
+    pdf.rect(0.25, 3.75, 7.75, 4)
+    pdf.image(os.path.join(LOGO_ROOT, data["logo_relative_path"]), 0.75, 4, 1)
+    pdf.set_font('Times', 'B', 4)
+    pdf.ln(0.85)
+    pdf.cell(0.925)
+    pdf.cell(0, 0, f"{data['team_ssv_id']}", 0)
+
+    # Header
+    pdf.ln(-0.775)
+    pdf.set_font('Simsun', '', 15)
+    pdf.cell(1.875)
+    pdf.cell(0, 0, f"{data['team_chinese_name']}", 0)
+    pdf.set_font('Helvetica', '', 12)
+    pdf.ln(0.225)
+    pdf.cell(1.875)
+    pdf.cell(0, 0, f"{data['team_english_name']}", 0)
+    pdf.set_font('Helvetica', 'B', 11)
+    pdf.ln(0.175)
+    pdf.cell(1.875)
+    pdf.cell(0, 0, f"{data['team_malay_name']}", 0)
+
+    pdf.set_font('Times', '', 7)
+    pdf.ln(0.15)
+    pdf.cell(1.875)
+    pdf.cell(0, 0, f"{data['team_address']}", 0)
+    pdf.set_font('Helvetica', '', 10)
+    pdf.ln(0.15)
+    pdf.cell(1.875)
+    pdf.cell(0, 0, f"Contact: {data['team_phone_no']}", 0)
+
+    pdf.set_font('Simsun', '', 11)
+    pdf.ln(-0.7)
+    pdf.cell(6.275)
+    pdf.cell(0, 0, "正式收据", 0)
+    pdf.set_font('Times', '', 10)
+    pdf.ln(0.175)
+    pdf.cell(6)
+    pdf.cell(0, 0, "OFFICIAL RECEIPT", 0)
+    pdf.line(6, 4.5, 7.25, 4.5)
+    pdf.set_font('Times', '', 14)
+    pdf.ln(0.275)
+    pdf.cell(6)
+    pdf.cell(0, 0, f"No {data['recipe_no']}", 0)
+
+    # Name and Contact
+    pdf.set_font('Simsun', '', 11)
+    pdf.ln(0.6)
+    pdf.cell(1)
+    pdf.cell(0, 0, "姓名", 0)
+    pdf.set_font('Times', '', 10)
+    pdf.ln(0.175)
+    pdf.cell(1)
+    pdf.cell(0, 0, f"NAME : {data['customer_name']}", 0)
+    pdf.line(1.575, 5.5, 7.25, 5.5)
+
+    pdf.set_font('Simsun', '', 10)
+    pdf.ln(0.225)
+    pdf.cell(1)
+    pdf.cell(0, 0, "电话", 0)
+    pdf.set_font('Times', '', 10)
+    pdf.ln(0.175)
+    pdf.cell(1)
+    pdf.cell(0, 0, f"CONTACT : {data['cust_phone_no']}", 0)
+    pdf.line(1.825, 5.9, 7.25, 5.9)
+
+    # Checkbox
+    pdf.ln(0.225)
+    pdf.cell(1)
+    pdf.cell(0.25, 0.25, " X" if(data["cash_donation"]) else "", 1)
+    pdf.set_font('Simsun', '', 9)
+    pdf.ln(0.05)
+    pdf.cell(1.25)
+    pdf.cell(0, 0, "银额捐款", 0)
+    pdf.set_font('Times', '', 9)
+    pdf.ln(0.175)
+    pdf.cell(1.25)
+    pdf.cell(0, 0, "DONATION (CASH)", 0)
+
+    pdf.ln(-0.225)
+    pdf.cell(2.575)
+    pdf.cell(0.25, 0.25, " X" if(data["medicine"]) else "", 1)
+    pdf.set_font('Simsun', '', 9)
+    pdf.ln(0.05)
+    pdf.cell(2.825)
+    pdf.cell(0, 0, "施药", 0)
+    pdf.set_font('Times', '', 9)
+    pdf.ln(0.175)
+    pdf.cell(2.825)
+    pdf.cell(0, 0, "MEDICINE", 0)
+
+    pdf.ln(-0.225)
+    pdf.cell(3.625)
+    pdf.cell(0.25, 0.25, " X" if(data["coffin"]) else "", 1)
+    pdf.set_font('Simsun', '', 9)
+    pdf.ln(0.05)
+    pdf.cell(3.875)
+    pdf.cell(0, 0, "施棺", 0)
+    pdf.set_font('Times', '', 9)
+    pdf.ln(0.175)
+    pdf.cell(3.875)
+    pdf.cell(0, 0, "COFFIN", 0)
+
+    # Bank Account
+    pdf.ln(-0.225)
+    pdf.cell(5)
+    pdf.image(os.path.join(ASSEST_PATH, "round_rect.png"), 4.5, 6.05, 2.75, 0.7)
+    # pdf.cell(2.25, 0.675, "", 1) #square rectangle
+    pdf.ln(0.175)
+    pdf.cell(4.575)
+    pdf.set_font('Times', 'BI', 10)
+    pdf.cell(0, 0, "Bank Account", 0)
+    pdf.ln(0.15)
+    pdf.cell(4.575)
+    pdf.cell(0, 0, f"{data['bank_owner_name']}", 0)
+    pdf.ln(0.15)
+    pdf.cell(4.575)
+    pdf.cell(0, 0, f"{data['bank_name']} - {data['bank_account_number']}", 0)
+
+    # Amount
+    pdf.ln(-0.02)
+    pdf.cell(1)
+    pdf.cell(3, 0.325, "", 1)
+    pdf.ln(0.16)
+    pdf.cell(1.05)
+    pdf.set_font('Times', '', 13)
+    pdf.cell(0, 0, f"RM {data['amount']}", 0)
+    pdf.ln(0.35)
+    pdf.cell(0.95)
+    pdf.set_font('Times', '', 10)
+    pdf.cell(0, 0, f"Cash/Cheque No : {data['cheque_no']}", 0)
+
+    # Received By
+    pdf.ln(0.095)
+    pdf.cell(4.125)
+    pdf.set_font('Simsun', '', 10)
+    pdf.cell(0, 0, "签收", 0)
+    pdf.ln(0.175)
+    pdf.cell(4.125)
+    pdf.set_font('Times', '', 12)
+    pdf.cell(0, 0, "Received By :", 0)
+    pdf.line(5.125, 7.4, 7.25, 7.4)
+
+    # Date
+    pdf.ln(-2.325)
+    pdf.cell(5.6)
+    pdf.set_font('Simsun', '', 8)
+    pdf.cell(0, 0, "日期", 0)
+    pdf.ln(0.125)
+    pdf.cell(5.6)
+    pdf.set_font('Times', '', 8)
+    pdf.cell(0, 0, f"DATE : {data['donation_date']}", 0)
+    pdf.line(6, 5.175, 7.25, 5.175)
+
+    # Output PDF
+    output_path = os.path.join(PDF_PATH, f"{data['username']}_{randint(1, 999999)}.pdf")
+    pdf.output(output_path, 'F')
+    return output_path
 
 ## Email
-def send_smail(english_name, customer_email):
+def send_smail(data, pdf_output_path):
     msg = MIMEMultipart()
     msg['Subject'] = 'Donation Receipt'
-    msg['From'] = str(english_name)
-    msg['To'] = str(customer_email)
+    msg['From'] = str("CKTEAM")
+    msg['To'] = str(data["email"])
 
     body = "<p>Here's the receipt. Thanks for your donation.</p>"
     msgText = MIMEText('<b>%s</b>' % (body), 'html')
     msg.attach(msgText)
 
-    filename = "1.pdf"
+    filename = pdf_output_path
     with open(filename, "rb") as f:
         attach = MIMEApplication(f.read(), _subtype="pdf")
     attach.add_header('Content-Disposition', 'attachment', filename=str(filename))
@@ -144,11 +330,25 @@ def donation():
         return jsonify({"msg": "amount Missing", "success": False})
 
     try:
-        description = request.json.get("description")
-        if (description == None):
-            return jsonify({"msg": "description Missing", "success": False})
+        cash_donation = request.json.get("cash_donation")
+        if (cash_donation == None):
+            return jsonify({"msg": "cash_donation Missing", "success": False})
     except:
-        return jsonify({"msg": "description Missing", "success": False})
+        return jsonify({"msg": "cash_donation Missing", "success": False})
+
+    try:
+        medicine = request.json.get("medicine")
+        if (medicine == None):
+            return jsonify({"msg": "medicine Missing", "success": False})
+    except:
+        return jsonify({"msg": "medicine Missing", "success": False})
+
+    try:
+        coffin = request.json.get("coffin")
+        if (coffin == None):
+            return jsonify({"msg": "coffin Missing", "success": False})
+    except:
+        return jsonify({"msg": "coffin Missing", "success": False})
 
     try:
         username = request.json.get("username")
@@ -157,17 +357,128 @@ def donation():
     except:
         return jsonify({"msg": "username Missing", "success": False})
 
-    donation_date = datetime.strptime(datetime.today().strftime('%Y-%m-%d %H:%M:%S'), '%Y-%m-%d %H:%M:%S')
+    try:
+        email = request.json.get("email")
+        if (email == None):
+            return jsonify({"msg": "email Missing", "success": False})
+    except:
+        return jsonify({"msg": "email Missing", "success": False})
+
+    try:
+        role = request.json.get("role")
+        if (role == None):
+            return jsonify({"msg": "role Missing", "success": False})
+    except:
+        return jsonify({"msg": "role Missing", "success": False})
+
+    try:
+        donation_type = request.json.get("donation_type")
+        if (donation_type == None):
+            return jsonify({"msg": "donation_type Missing", "success": False})
+        if(donation_type == 2):
+            try:
+                cheque_no = request.json.get("cheque_no")
+                if (cheque_no == None):
+                    return jsonify({"msg": "cheque_no Missing", "success": False})
+            except:
+                return jsonify({"msg": "cheque_no Missing", "success": False})
+        else:
+            cheque_no = "-"
+    except:
+        return jsonify({"msg": "donation_type Missing", "success": False})
+
+    try:
+        donation_date = request.json.get("donation_date")
+        if (donation_date == None):
+            return jsonify({"msg": "donation_datetime Missing", "success": False})
+    except:
+        return jsonify({"msg": "donation_datetime Missing", "success": False})
+
+    try:
+        cust_phone_no = request.json.get("cust_phone_no")
+        if (cust_phone_no == None):
+            return jsonify({"msg": "cust_phone_no Missing", "success": False})
+    except:
+        return jsonify({"msg": "cust_phone_no Missing", "success": False})
+
+    for _ in range(10):
+        recipe_no = randint(100000, 199999)
 
     response = insert_data('''
-            INSERT INTO report(datetime,customer_name,amount,description,username)VALUES(?,?,?,?,?)
-        ''', (donation_date, customer_name, amount, description, username))
+            INSERT INTO report(datetime,customer_name,amount,username, email, role, donation_type, cheque_no, recipe_no, cash_donation, coffin, medicine,cust_phone_no)VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)
+        ''', (donation_date, customer_name, amount, username, email, role, donation_type, cheque_no, recipe_no, cash_donation, coffin, medicine,cust_phone_no))
 
     if(response["success"]):
-        send_smail("TEST", "hanshengliang@outlook.com")
-        return jsonify({"msg": "Record Successfully", "success": response["success"]})
+        res = select_one_data("SELECT * FROM volunteer WHERE username=?", (username,))
+        if(res["success"]):
+            if res["data"] != None:
+                selected_team = res["data"][7]
+            else:
+                return jsonify({"msg": "invalid volunteer username", "success": False})
+        else:
+            return jsonify({"msg": "database error", "error_msg": res["error_msg"],"success": False})
+
+        res = select_one_data("SELECT * FROM team WHERE username=?", (selected_team,))
+        if (res["success"]):
+            if res["data"] != None:
+                team_english_name = res["data"][3]
+                team_address = res["data"][4]
+                team_phone_no = res["data"][5]
+                logo_relative_path = res["data"][6]
+                team_chinese_name = res["data"][7]
+                team_malay_name = res["data"][8]
+                team_ssv_id = res["data"][9]
+                bank_name = res["data"][10]
+                bank_owner_name = res["data"][11]
+                bank_account_number = res["data"][12]
+            else:
+                return jsonify({"msg": "invalid username", "success": False})
+        else:
+            return jsonify({"msg": "database error", "error_msg": res["error_msg"], "success": False})
+
+        js = {
+            "username": username,
+            "team_english_name": team_english_name,
+            "team_address": team_address,
+            "team_phone_no": team_phone_no,
+            "logo_relative_path": logo_relative_path,
+            "team_chinese_name": team_chinese_name,
+            "team_malay_name": team_malay_name,
+            "team_ssv_id": team_ssv_id,
+            "bank_name": bank_name,
+            "bank_owner_name": bank_owner_name,
+            "bank_account_number": bank_account_number,
+            "donation_date": donation_date,
+            "customer_name": customer_name,
+            "amount": amount,
+            "email": email,
+            "cheque_no": cheque_no,
+            "recipe_no": recipe_no,
+            "cash_donation": cash_donation,
+            "coffin": coffin,
+            "medicine": medicine,
+            "cust_phone_no": cust_phone_no
+        }
+        pdf_output_path = generate_pdf(js)
+        send_smail(js, pdf_output_path)
+
+        res = update_data("UPDATE report SET pdf_path=? WHERE datetime=? AND customer_name=? AND amount=?", (pdf_output_path[4:],donation_date, customer_name, amount,))
+        if(res["success"]):
+            return jsonify({"msg": "Record Successfully & Email Sent", "success": response["success"]})
+        else:
+            return jsonify({"msg": "PDF save Failed", "success": response["success"]})
     else:
         return jsonify({"msg": "Record Failed", "success": response["success"]})
+
+@app.route('/pdf/<string:id>', methods=["GET"])
+def download_file(id):
+    res = select_one_data("SELECT * FROM report WHERE id=?", (id,))
+    if(res["success"]):
+        if(res["data"] != None):
+            filename = res["data"][14]
+        else:
+            return jsonify({"msg": "invalid id", "success": False})
+    return send_from_directory(PDF_PATH, filename, as_attachment=False)
 
 @app.route("/volunteer/register", methods=["POST"])
 def volunteer_register():
@@ -311,6 +622,27 @@ def team_register():
         return jsonify({"msg": "team_ssm_id Missing", "success": False})
 
     try:
+        bank_name = request.form['bank_name']
+        if (bank_name == None):
+            return jsonify({"msg": "bank_name Missing", "success": False})
+    except:
+        return jsonify({"msg": "bank_name Missing", "success": False})
+
+    try:
+        bank_owner_name = request.form['bank_owner_name']
+        if (bank_owner_name == None):
+            return jsonify({"msg": "bank_owner_name Missing", "success": False})
+    except:
+        return jsonify({"msg": "bank_owner_name Missing", "success": False})
+
+    try:
+        bank_account_number = request.form['bank_account_number']
+        if (bank_account_number == None):
+            return jsonify({"msg": "bank_account_number Missing", "success": False})
+    except:
+        return jsonify({"msg": "bank_account_number Missing", "success": False})
+
+    try:
         logo_file = request.files.get('logo_file')
         if (logo_file == None):
             return jsonify({"msg": "logo_file Missing", "success": False})
@@ -338,8 +670,8 @@ def team_register():
         return jsonify({"msg": "Username Checking Failed", "success": False})
 
     response = insert_data('''
-        INSERT INTO team(username,password,english_name, address, phone_no, logo_path, chinese_name, malay_name, team_ssm_id)VALUES(?,?,?,?,?,?,?,?,?)
-    ''', (username, password, english_name, address, phone_no, os.path.join(LOGO_ROOT, filename), chinese_name, malay_name, team_ssm_id,))
+        INSERT INTO team(username,password,english_name, address, phone_no, logo_path, chinese_name, malay_name, team_ssm_id, bank_name, bank_owner_name, bank_account_number)VALUES(?,?,?,?,?,?,?,?,?,?,?,?)
+    ''', (username, password, english_name, address, phone_no, filename, chinese_name, malay_name, team_ssm_id,bank_name, bank_owner_name, bank_account_number,))
 
     if(response["success"]):
         return jsonify({"msg": "{} registered successfully".format(username), "success": response["success"]})
@@ -480,11 +812,12 @@ def volunteer_donation_list():
                 if(response["data"] != None):
                     for details in response["data"]:
                         js = {
+                            "id": details[0],
                             "datetime": details[1],
                             "customer_name": details[2],
                             "amount": details[3],
-                            "description": details[4],
-                            "username": details[5]
+                            "description": f"{'Cash, ' if details[10] == 1 else ''}{'Medicine, ' if details[11] == 1 else ''}{'Coffin' if details[12] == 1 else ''}",
+                            "username": details[4]
                         }
                         main_list.append(js)
                     return jsonify({"msg": "Data Retrieve Successfully", "data": main_list, "success": True})
@@ -516,11 +849,12 @@ def team_donation_list():
                 if(response["data"] != None):
                     for details in response["data"]:
                         js = {
+                            "id": details[0],
                             "datetime": details[1],
                             "customer_name": details[2],
                             "amount": details[3],
-                            "description": details[4],
-                            "username": details[5]
+                            "description": f"{'Cash, ' if details[10] == 1 else ''}{'Medicine, ' if details[11] == 1 else ''}{'Coffin' if details[12] == 1 else ''}",
+                            "username": details[4]
                         }
                         main_list.append(js)
                     return jsonify({"msg": "Data Retrieve Successfully", "data": main_list, "success": True})
@@ -541,11 +875,12 @@ def donation_list():
             return jsonify({"data": [], "success": True})
         for details in response["data"]:
             js = {
+                "id": details[0],
                 "datetime": details[1],
                 "customer_name": details[2],
                 "amount": details[3],
-                "description": details[4],
-                "username": details[5]
+                "description": f"{'Cash, ' if details[10] == 1 else ''}{'Medicine, ' if details[11] == 1 else ''}{'Coffin' if details[12] == 1 else ''}",
+                "username": details[4]
             }
             main_list.append(js)
         return jsonify({"data": main_list, "success": True})
