@@ -28,195 +28,21 @@ app.config['CORS_HEADERS'] = 'Content-Type'
 app.config["JWT_SECRET_KEY"] = "super-secret"
 jwt = JWTManager(app)
 
-DATABASE_PATH = "/home/ubuntu/ckteam-backend/database.sqlite"
-ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg'])
-LOGO_ROOT = "/home/ubuntu/ckteam-backend/logo"
-FONT_PATH = '/home/ubuntu/ckteam-backend/font/unifont/'
-PDF_PATH = "/home/ubuntu/ckteam-backend/pdf"
-ASSEST_PATH = "/home/ubuntu/ckteam-backend/assest"
-
-# DATABASE_PATH = "database.sqlite"
+# DATABASE_PATH = "/home/ubuntu/ckteam-backend/database.sqlite"
 # ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg'])
-# LOGO_ROOT = "logo"
-# FONT_PATH = 'font/unifont/'
-# PDF_PATH = "pdf"
-# ASSEST_PATH = "assest"
+# LOGO_ROOT = "/home/ubuntu/ckteam-backend/logo"
+# FONT_PATH = '/home/ubuntu/ckteam-backend/font/unifont/'
+# PDF_PATH = "/home/ubuntu/ckteam-backend/pdf"
+# ASSEST_PATH = "/home/ubuntu/ckteam-backend/assest"
+
+DATABASE_PATH = "database.sqlite"
+ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg'])
+LOGO_ROOT = "logo"
+FONT_PATH = 'font/unifont/'
+PDF_PATH = "pdf"
+ASSEST_PATH = "assest"
 
 from random import randint
-
-def generate_pdf(data):
-    os.system("pwd")
-    subprocess.call(["php", "tfpdf.php"], shell=True)
-
-    pdf = FPDF('P', 'in', 'A4');
-    pdf.add_page()
-
-    # Chinese font
-    pdf.add_font('Simsun', '', os.path.join(FONT_PATH, "SIMSUN.ttf"), uni=True)
-
-    pdf.set_margins(0, 0, 0)
-    pdf.ln(3.75)
-    pdf.rect(0.25, 3.75, 7.75, 4)
-    pdf.image(os.path.join(LOGO_ROOT, data["logo_relative_path"]), 0.75, 4, 1)
-    pdf.set_font('Times', 'B', 4)
-    pdf.ln(0.85)
-    pdf.cell(0.925)
-    pdf.cell(0, 0, f"{data['team_ssv_id']}", 0)
-
-    # Header
-    pdf.ln(-0.775)
-    pdf.set_font('Simsun', '', 15)
-    pdf.cell(1.875)
-    pdf.cell(0, 0, f"{data['team_chinese_name']}", 0)
-    pdf.set_font('Helvetica', '', 12)
-    pdf.ln(0.225)
-    pdf.cell(1.875)
-    pdf.cell(0, 0, f"{data['team_english_name']}", 0)
-    pdf.set_font('Helvetica', 'B', 11)
-    pdf.ln(0.175)
-    pdf.cell(1.875)
-    pdf.cell(0, 0, f"{data['team_malay_name']}", 0)
-
-    pdf.set_font('Times', '', 7)
-    pdf.ln(0.15)
-    pdf.cell(1.875)
-    pdf.cell(0, 0, f"{data['team_address']}", 0)
-    pdf.set_font('Helvetica', '', 10)
-    pdf.ln(0.15)
-    pdf.cell(1.875)
-    pdf.cell(0, 0, f"Contact: {data['team_phone_no']}", 0)
-
-    pdf.set_font('Simsun', '', 11)
-    pdf.ln(-0.7)
-    pdf.cell(6.275)
-    pdf.cell(0, 0, "正式收据", 0)
-    pdf.set_font('Times', '', 10)
-    pdf.ln(0.175)
-    pdf.cell(6)
-    pdf.cell(0, 0, "OFFICIAL RECEIPT", 0)
-    pdf.line(6, 4.5, 7.25, 4.5)
-    pdf.set_font('Times', '', 14)
-    pdf.ln(0.275)
-    pdf.cell(6)
-    pdf.cell(0, 0, f"No {data['recipe_no']}", 0)
-
-    # Name and Contact
-    pdf.set_font('Simsun', '', 11)
-    pdf.ln(0.6)
-    pdf.cell(1)
-    pdf.cell(0, 0, "姓名", 0)
-    pdf.set_font('Times', '', 10)
-    pdf.ln(0.175)
-    pdf.cell(1)
-    pdf.cell(0, 0, f"NAME : {data['customer_name']}", 0)
-    pdf.line(1.575, 5.5, 7.25, 5.5)
-
-    pdf.set_font('Simsun', '', 10)
-    pdf.ln(0.225)
-    pdf.cell(1)
-    pdf.cell(0, 0, "电话", 0)
-    pdf.set_font('Times', '', 10)
-    pdf.ln(0.175)
-    pdf.cell(1)
-    pdf.cell(0, 0, f"CONTACT : {data['cust_phone_no']}", 0)
-    pdf.line(1.825, 5.9, 7.25, 5.9)
-
-    # Checkbox
-    pdf.ln(0.225)
-    pdf.cell(1)
-    pdf.cell(0.25, 0.25, " X" if(data["cash_donation"]) else "", 1)
-    pdf.set_font('Simsun', '', 9)
-    pdf.ln(0.05)
-    pdf.cell(1.25)
-    pdf.cell(0, 0, "银额捐款", 0)
-    pdf.set_font('Times', '', 9)
-    pdf.ln(0.175)
-    pdf.cell(1.25)
-    pdf.cell(0, 0, "DONATION (CASH)", 0)
-
-    pdf.ln(-0.225)
-    pdf.cell(2.575)
-    pdf.cell(0.25, 0.25, " X" if(data["medicine"]) else "", 1)
-    pdf.set_font('Simsun', '', 9)
-    pdf.ln(0.05)
-    pdf.cell(2.825)
-    pdf.cell(0, 0, "施药", 0)
-    pdf.set_font('Times', '', 9)
-    pdf.ln(0.175)
-    pdf.cell(2.825)
-    pdf.cell(0, 0, "MEDICINE", 0)
-
-    pdf.ln(-0.225)
-    pdf.cell(3.625)
-    pdf.cell(0.25, 0.25, " X" if(data["coffin"]) else "", 1)
-    pdf.set_font('Simsun', '', 9)
-    pdf.ln(0.05)
-    pdf.cell(3.875)
-    pdf.cell(0, 0, "施棺", 0)
-    pdf.set_font('Times', '', 9)
-    pdf.ln(0.175)
-    pdf.cell(3.875)
-    pdf.cell(0, 0, "COFFIN", 0)
-
-    # Bank Account
-    pdf.ln(-0.225)
-    pdf.cell(5)
-    pdf.image(os.path.join(ASSEST_PATH, "round_rect.png"), 4.5, 6.05, 2.75, 0.7)
-    # pdf.cell(2.25, 0.675, "", 1) #square rectangle
-    pdf.ln(0.175)
-    pdf.cell(4.575)
-    pdf.set_font('Times', 'BI', 10)
-    pdf.cell(0, 0, "Bank Account", 0)
-    pdf.ln(0.15)
-    pdf.cell(4.575)
-    pdf.cell(0, 0, f"{data['bank_owner_name']}", 0)
-    pdf.ln(0.15)
-    pdf.cell(4.575)
-    pdf.cell(0, 0, f"{data['bank_name']} - {data['bank_account_number']}", 0)
-
-    # Amount
-    pdf.ln(-0.02)
-    pdf.cell(1)
-    pdf.cell(3, 0.325, "", 1)
-    pdf.ln(0.16)
-    pdf.cell(1.05)
-    pdf.set_font('Times', '', 13)
-    pdf.cell(0, 0, f"RM {data['amount']}", 0)
-    pdf.ln(0.35)
-    pdf.cell(0.95)
-    pdf.set_font('Times', '', 10)
-    pdf.cell(0, 0, f"Cash/Cheque No : {data['cheque_no']}", 0)
-
-    # Received By
-    pdf.ln(0.095)
-    pdf.cell(4.125)
-    pdf.set_font('Simsun', '', 10)
-    pdf.cell(0, 0, "签收", 0)
-    pdf.ln(0.175)
-    pdf.cell(4.125)
-    pdf.set_font('Times', '', 12)
-    pdf.cell(0, 0, "Received By :", 0)
-    pdf.line(5.125, 7.4, 7.25, 7.4)
-
-    # Date
-    pdf.ln(-2.325)
-    pdf.cell(5.6)
-    pdf.set_font('Simsun', '', 8)
-    pdf.cell(0, 0, "日期", 0)
-    pdf.ln(0.125)
-    pdf.cell(5.6)
-    pdf.set_font('Times', '', 8)
-    pdf.cell(0, 0, f"DATE : {data['donation_date']}", 0)
-    pdf.line(6, 5.175, 7.25, 5.175)
-
-    # Output PDF
-    pdf_name = f"{data['username']}_{randint(1, 999999)}.pdf"
-    full_output_path = os.path.join(PDF_PATH, pdf_name)
-
-    pdf.output(full_output_path, 'F')
-
-    return full_output_path, pdf_name
-
 
 ## Email
 def send_smail(data, pdf_output_path):
@@ -316,6 +142,183 @@ def delete_data(sql):
 def allowed_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+
+def generate_pdf(data):
+    response = select_one_data("SELECT * FROM pdf")
+    if(not response["success"]):
+        return jsonify({"msg": "Database Error", "error_msg": response["error_msg"], "success": False})
+
+    subprocess.call(["php", "tfpdf.php"], shell=True)
+
+    pdf = FPDF('P', 'in', 'A4');
+    pdf.add_page()
+
+    # Chinese font
+    pdf.add_font('Simsun', '', os.path.join(FONT_PATH, "SIMSUN.ttf"), uni=True)
+
+    pdf.set_margins(0, 0, 0)
+    pdf.ln(3.75)
+    pdf.rect(0.25, 3.75, 7.75, 4)
+    pdf.image(os.path.join(LOGO_ROOT, data["logo_relative_path"]), 0.75, 4, 1)
+    pdf.set_font('Times', 'B', 4)
+    pdf.ln(0.85)
+    pdf.cell(0.925)
+    pdf.cell(0, 0, f"{data['team_ssv_id']}", 0)
+
+    # Header
+    pdf.ln(-0.775)
+    pdf.set_font('Simsun', '', 15)
+    pdf.cell(1.875)
+    pdf.cell(0, 0, f"{data['team_chinese_name']}", 0)
+    pdf.set_font('Helvetica', '', 12)
+    pdf.ln(0.225)
+    pdf.cell(1.875)
+    pdf.cell(0, 0, f"{data['team_english_name']}", 0)
+    pdf.set_font('Helvetica', 'B', 11)
+    pdf.ln(0.175)
+    pdf.cell(1.875)
+    pdf.cell(0, 0, f"{data['team_malay_name']}", 0)
+
+    pdf.set_font('Times', '', 7)
+    pdf.ln(0.15)
+    pdf.cell(1.875)
+    pdf.cell(0, 0, f"{data['team_address']}", 0)
+    pdf.set_font('Helvetica', '', 10)
+    pdf.ln(0.15)
+    pdf.cell(1.875)
+    pdf.cell(0, 0, f"Contact: {data['team_phone_no']}", 0)
+
+    pdf.set_font('Simsun', '', 11)
+    pdf.ln(-0.7)
+    pdf.cell(6.275)
+    pdf.cell(0, 0, response["data"][0], 0)
+    pdf.set_font('Times', '', 10)
+    pdf.ln(0.175)
+    pdf.cell(6)
+    pdf.cell(0, 0, "OFFICIAL RECEIPT", 0)
+    pdf.line(6, 4.5, 7.25, 4.5)
+    pdf.set_font('Times', '', 14)
+    pdf.ln(0.275)
+    pdf.cell(6)
+    pdf.cell(0, 0, f"No {data['recipe_no']}", 0)
+
+    # Name and Contact
+    pdf.set_font('Simsun', '', 11)
+    pdf.ln(0.6)
+    pdf.cell(1)
+    pdf.cell(0, 0, response["data"][1], 0)
+    pdf.set_font('Times', '', 10)
+    pdf.ln(0.175)
+    pdf.cell(1)
+    pdf.cell(0, 0, f"NAME : {data['customer_name']}", 0)
+    pdf.line(1.575, 5.5, 7.25, 5.5)
+
+    pdf.set_font('Simsun', '', 10)
+    pdf.ln(0.225)
+    pdf.cell(1)
+    pdf.cell(0, 0, response["data"][1], 0)
+    pdf.set_font('Times', '', 10)
+    pdf.ln(0.175)
+    pdf.cell(1)
+    pdf.cell(0, 0, f"CONTACT : {data['cust_phone_no']}", 0)
+    pdf.line(1.825, 5.9, 7.25, 5.9)
+
+    # Checkbox
+    pdf.ln(0.225)
+    pdf.cell(1)
+    pdf.cell(0.25, 0.25, " X" if (data["cash_donation"]) else "", 1)
+    pdf.set_font('Simsun', '', 9)
+    pdf.ln(0.05)
+    pdf.cell(1.25)
+    pdf.cell(0, 0, response["data"][3], 0)
+    pdf.set_font('Times', '', 9)
+    pdf.ln(0.175)
+    pdf.cell(1.25)
+    pdf.cell(0, 0, "DONATION (CASH)", 0)
+
+    pdf.ln(-0.225)
+    pdf.cell(2.575)
+    pdf.cell(0.25, 0.25, " X" if (data["medicine"]) else "", 1)
+    pdf.set_font('Simsun', '', 9)
+    pdf.ln(0.05)
+    pdf.cell(2.825)
+    pdf.cell(0, 0, response["data"][4], 0)
+    pdf.set_font('Times', '', 9)
+    pdf.ln(0.175)
+    pdf.cell(2.825)
+    pdf.cell(0, 0, "MEDICINE", 0)
+
+    pdf.ln(-0.225)
+    pdf.cell(3.625)
+    pdf.cell(0.25, 0.25, " X" if (data["coffin"]) else "", 1)
+    pdf.set_font('Simsun', '', 9)
+    pdf.ln(0.05)
+    pdf.cell(3.875)
+    pdf.cell(0, 0, response["data"][5], 0)
+    pdf.set_font('Times', '', 9)
+    pdf.ln(0.175)
+    pdf.cell(3.875)
+    pdf.cell(0, 0, "COFFIN", 0)
+
+    # Bank Account
+    pdf.ln(-0.225)
+    pdf.cell(5)
+    pdf.image(os.path.join(ASSEST_PATH, "round_rect.png"), 4.5, 6.05, 2.75, 0.7)
+    # pdf.cell(2.25, 0.675, "", 1) #square rectangle
+    pdf.ln(0.175)
+    pdf.cell(4.575)
+    pdf.set_font('Times', 'BI', 10)
+    pdf.cell(0, 0, "Bank Account", 0)
+    pdf.ln(0.15)
+    pdf.cell(4.575)
+    pdf.cell(0, 0, f"{data['bank_owner_name']}", 0)
+    pdf.ln(0.15)
+    pdf.cell(4.575)
+    pdf.cell(0, 0, f"{data['bank_name']} - {data['bank_account_number']}", 0)
+
+    # Amount
+    pdf.ln(-0.02)
+    pdf.cell(1)
+    pdf.cell(3, 0.325, "", 1)
+    pdf.ln(0.16)
+    pdf.cell(1.05)
+    pdf.set_font('Times', '', 13)
+    pdf.cell(0, 0, f"RM {data['amount']}", 0)
+    pdf.ln(0.35)
+    pdf.cell(0.95)
+    pdf.set_font('Times', '', 10)
+    pdf.cell(0, 0, f"Cash/Cheque No : {data['cheque_no']}", 0)
+
+    # Received By
+    pdf.ln(0.095)
+    pdf.cell(4.125)
+    pdf.set_font('Simsun', '', 10)
+    pdf.cell(0, 0, response["data"][6], 0)
+    pdf.ln(0.175)
+    pdf.cell(4.125)
+    pdf.set_font('Times', '', 12)
+    pdf.cell(0, 0, "Received By : LK", 0)
+    pdf.line(5.125, 7.4, 7.25, 7.4)
+
+    # Date
+    pdf.ln(-2.325)
+    pdf.cell(5.6)
+    pdf.set_font('Simsun', '', 8)
+    pdf.cell(0, 0, response["data"][7], 0)
+    pdf.ln(0.125)
+    pdf.cell(5.6)
+    pdf.set_font('Times', '', 8)
+    pdf.cell(0, 0, f"DATE : {data['donation_date']}", 0)
+    pdf.line(6, 5.175, 7.25, 5.175)
+
+    # Output PDF
+    pdf_name = f"{data['username']}_{randint(1, 999999)}.pdf"
+    full_output_path = os.path.join(PDF_PATH, pdf_name)
+
+    pdf.output(full_output_path, 'F')
+
+    return full_output_path, pdf_name
 
 @app.route("/donation/volunteer", methods=["POST"])
 @cross_origin()
@@ -624,53 +627,60 @@ def download_file(id):
 @app.route("/volunteer/register", methods=["POST"])
 def volunteer_register():
     try:
-        username = request.json.get("username")
+        username = request.form["username"]
         if (username == None):
             return jsonify({"msg": "Username Missing", "success": False})
     except:
         return jsonify({"msg": "Username Missing", "success": False})
 
     try:
-        password = request.json.get("password")
+        password = request.form["password"]
         if (password == None):
             return jsonify({"msg": "Password Missing", "success": False})
     except:
         return jsonify({"msg": "password Missing", "success": False})
 
     try:
-        display_name = request.json.get("display_name")
-        if (display_name == None):
-            return jsonify({"msg": "display_name Missing", "success": False})
+        english_name = request.form["english_name"]
+        if (english_name == None):
+            return jsonify({"msg": "english_name Missing", "success": False})
     except:
-        return jsonify({"msg": "display_name Missing", "success": False})
+        return jsonify({"msg": "english_name Missing", "success": False})
 
     try:
-        address = request.json.get("address")
+        address = request.form["address"]
         if (address == None):
             return jsonify({"msg": "address Missing", "success": False})
     except:
         return jsonify({"msg": "address Missing", "success": False})
 
     try:
-        phone_no = request.json.get("phone_no")
+        phone_no = request.form["phone_no"]
         if (phone_no == None):
             return jsonify({"msg": "phone_no Missing", "success": False})
     except:
         return jsonify({"msg": "phone_no Missing", "success": False})
 
     try:
-        ic = request.json.get("ic")
+        ic = request.form["ic"]
         if (ic == None):
             return jsonify({"msg": "ic Missing", "success": False})
     except:
         return jsonify({"msg": "ic Missing", "success": False})
 
     try:
-        team = request.json.get("team")
+        team = request.form["team"]
         if (team == None):
             return jsonify({"msg": "team Missing", "success": False})
     except:
         return jsonify({"msg": "team Missing", "success": False})
+
+    try:
+        logo_file = request.files.get('logo_file')
+        if (logo_file == None):
+            return jsonify({"msg": "logo_file Missing", "success": False})
+    except:
+        return jsonify({"msg": "logo_file Missing", "success": False})
 
     ## Check Team Valid Anot
     response = select_all_data("SELECT * FROM team")
@@ -680,10 +690,9 @@ def volunteer_register():
             if (team == row[1]):
                 validTeam = True
         if(validTeam == False):
-            return jsonify({"msg": "Invalid Team. Please Submit Team Username", "success": False})
+            return jsonify({"msg": "Invalid Team. Please Check Team Username", "success": False})
     else:
-        print(response["error_msg"])
-        return jsonify({"msg": "Team Checking Failed", "success": False})
+        return jsonify({"msg": "Team Checking Failed", "error_msg": response["error_msg"],"success": False})
 
     ## Check Username
     response = select_all_data("SELECT username FROM team UNION ALL SELECT username FROM volunteer")
@@ -692,12 +701,16 @@ def volunteer_register():
             if(username == row[0]):
                 return jsonify({"msg": "Username Taken.", "success": False})
     else:
-        print(response["error_msg"])
-        return jsonify({"msg": "Username Checking Failed", "success": False})
+        return jsonify({"msg": "Username Checking Failed", "error_msg": response["error_msg"], "success": False})
+
+    ## Save Image
+    filename = secure_filename(logo_file.filename)
+    modified_filename = f"{randint(1, 999999)}_{filename}"
+    logo_file.save(os.path.join(LOGO_ROOT, modified_filename))
 
     response = insert_data('''
-        INSERT INTO volunteer(username,password,display_name, address, phone_no, ic, team)VALUES(?,?,?,?,?,?,?)
-    ''', (username, password, display_name, address, phone_no, ic, team))
+        INSERT INTO volunteer(username,password,english_name, address, phone_no, ic, team, logo_path)VALUES(?,?,?,?,?,?,?,?)
+    ''', (username, password, english_name, address, phone_no, ic, team, modified_filename,))
 
     if(response["success"]):
         return jsonify({"msg": "{} registered successfully".format(username), "success": response["success"]})
@@ -707,49 +720,49 @@ def volunteer_register():
 @app.route("/volunteer/edit", methods=["POST"])
 def volunteer_edit():
     try:
-        username = request.json.get("username")
+        username = request.form["username"]
         if (username == None):
             return jsonify({"msg": "Username Missing", "success": False})
     except:
         return jsonify({"msg": "Username Missing", "success": False})
 
     try:
-        password = request.json.get("password")
+        password = request.form["password"]
         if (password == None):
             return jsonify({"msg": "Password Missing", "success": False})
     except:
         return jsonify({"msg": "password Missing", "success": False})
 
     try:
-        display_name = request.json.get("display_name")
-        if (display_name == None):
-            return jsonify({"msg": "display_name Missing", "success": False})
+        english_name = request.form["english_name"]
+        if (english_name == None):
+            return jsonify({"msg": "english_name Missing", "success": False})
     except:
-        return jsonify({"msg": "display_name Missing", "success": False})
+        return jsonify({"msg": "english_name Missing", "success": False})
 
     try:
-        address = request.json.get("address")
+        address = request.form["address"]
         if (address == None):
             return jsonify({"msg": "address Missing", "success": False})
     except:
         return jsonify({"msg": "address Missing", "success": False})
 
     try:
-        phone_no = request.json.get("phone_no")
+        phone_no = request.form["phone_no"]
         if (phone_no == None):
             return jsonify({"msg": "phone_no Missing", "success": False})
     except:
         return jsonify({"msg": "phone_no Missing", "success": False})
 
     try:
-        ic = request.json.get("ic")
+        ic = request.form["ic"]
         if (ic == None):
             return jsonify({"msg": "ic Missing", "success": False})
     except:
         return jsonify({"msg": "ic Missing", "success": False})
 
     try:
-        team = request.json.get("team")
+        team = request.form["team"]
         if (team == None):
             return jsonify({"msg": "team Missing", "success": False})
     except:
@@ -765,15 +778,34 @@ def volunteer_edit():
         if(validTeam == False):
             return jsonify({"msg": "Invalid Team. Please Submit Team Username", "success": False})
     else:
-        print(response["error_msg"])
         return jsonify({"msg": "Team Checking Failed", "success": False})
 
-    # response = insert_data('''
-    #     INSERT INTO volunteer(username,password,display_name, address, phone_no, ic, team)VALUES(?,?,?,?,?,?,?)
-    # ''', (username, password, display_name, address, phone_no, ic, team))
-    response = update_data("UPDATE volunteer SET password=?, display_name=?, address=?, phone_no=?, ic=?, team=? WHERE username=?", (password, display_name, address, phone_no, ic, team, username,))
+    logo_file = request.files.get('logo_file')
+    isLogoEmpty = True;
 
-    if(response["success"]):
+    if logo_file == None or logo_file.filename == '':
+        isLogoEmpty = True
+    else:
+        isLogoEmpty = False
+        if not allowed_file(logo_file.filename):
+            return jsonify({"msg": "only support jpg, jpeg, png format", "success": False})
+
+        ## Save Image
+        filename = secure_filename(logo_file.filename)
+        modified_filename = f"{randint(1, 999999)}_{filename}"
+        logo_path = os.path.join(LOGO_ROOT, modified_filename)
+        logo_file.save(logo_path)
+
+    if (isLogoEmpty):
+        response = update_data('''
+                UPDATE volunteer SET password=?, english_name=?, address=?, phone_no=?, ic=?, team=? WHERE username=?
+            ''', (password, english_name, address, phone_no, ic, team, username, ))
+    else:
+        response = update_data('''
+                        UPDATE volunteer SET password=?, english_name=?, address=?, phone_no=?, ic=?, team=?, logo_path=? WHERE username=?
+                    ''', (password, english_name, address, phone_no, ic, team, modified_filename, username,))
+
+    if (response["success"]):
         return jsonify({"msg": "{} updated successfully".format(username), "success": response["success"]})
     else:
         return jsonify({"msg": response["msg"], "success": response["success"]})
@@ -864,6 +896,13 @@ def team_register():
     except:
         return jsonify({"msg": "logo_file Missing", "success": False})
 
+    try:
+        pic = request.form['pic']
+        if (pic == None):
+            return jsonify({"msg": "pic Missing", "success": False})
+    except:
+        return jsonify({"msg": "pic Missing", "success": False})
+
     if logo_file.filename == '':
         return jsonify({"msg": "no selected file", "success": False})
 
@@ -872,7 +911,8 @@ def team_register():
 
     ## Save Image
     filename = secure_filename(logo_file.filename)
-    logo_file.save(os.path.join(LOGO_ROOT, filename))
+    modified_filename = f"{randint(1, 999999)}_{filename}"
+    logo_file.save(os.path.join(LOGO_ROOT, modified_filename))
 
     ## Check Username
     response = select_all_data("SELECT username FROM team UNION ALL SELECT username FROM volunteer")
@@ -881,15 +921,135 @@ def team_register():
             if(username == row[0]):
                 return jsonify({"msg": "Username Taken.", "success": False})
     else:
-        print(response["error_msg"])
-        return jsonify({"msg": "Username Checking Failed", "success": False})
+        return jsonify({"msg": "Username Checking Failed", "error_msg": response["error_msg"],  "success": False})
 
     response = insert_data('''
-        INSERT INTO team(username,password,english_name, address, phone_no, logo_path, chinese_name, malay_name, team_ssm_id, bank_name, bank_owner_name, bank_account_number)VALUES(?,?,?,?,?,?,?,?,?,?,?,?)
-    ''', (username, password, english_name, address, phone_no, filename, chinese_name, malay_name, team_ssm_id,bank_name, bank_owner_name, bank_account_number,))
+        INSERT INTO team(username,password,english_name, address, phone_no, logo_path, chinese_name, malay_name, team_ssm_id, bank_name, bank_owner_name, bank_account_number,pic)VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)
+    ''', (username, password, english_name, address, phone_no, modified_filename, chinese_name, malay_name, team_ssm_id,bank_name, bank_owner_name, bank_account_number,pic,))
 
     if(response["success"]):
         return jsonify({"msg": "{} registered successfully".format(username), "success": response["success"]})
+    else:
+        return jsonify({"msg": response["msg"], "success": response["success"]})
+
+@app.route("/team/edit", methods=["POST"])
+def team_edit():
+    try:
+        username = request.form['username']
+        if (username == None):
+            return jsonify({"msg": "Username Missing", "success": False})
+    except:
+        return jsonify({"msg": "Username Missing", "success": False})
+
+    try:
+        password = request.form['password']
+        if (password == None):
+            return jsonify({"msg": "Password Missing", "success": False})
+    except:
+        return jsonify({"msg": "password Missing", "success": False})
+
+    try:
+        english_name = request.form['english_name']
+        if (english_name == None):
+            return jsonify({"msg": "english_name Missing", "success": False})
+    except:
+        return jsonify({"msg": "english_name Missing", "success": False})
+
+    try:
+        address = request.form['address']
+        if (address == None):
+            return jsonify({"msg": "address Missing", "success": False})
+    except:
+        return jsonify({"msg": "address Missing", "success": False})
+
+    try:
+        phone_no = request.form['phone_no']
+        if (phone_no == None):
+            return jsonify({"msg": "phone_no Missing", "success": False})
+    except:
+        return jsonify({"msg": "phone_no Missing", "success": False})
+
+    try:
+        chinese_name = request.form['chinese_name']
+        if (chinese_name == None):
+            return jsonify({"msg": "chinese_name Missing", "success": False})
+    except:
+        return jsonify({"msg": "chinese_name Missing", "success": False})
+
+    try:
+        malay_name = request.form['malay_name']
+        if (malay_name == None):
+            return jsonify({"msg": "malay_name Missing", "success": False})
+    except:
+        return jsonify({"msg": "malay_name Missing", "success": False})
+
+    try:
+        team_ssm_id = request.form['team_ssm_id']
+        if (team_ssm_id == None):
+            return jsonify({"msg": "team_ssm_id Missing", "success": False})
+    except:
+        return jsonify({"msg": "team_ssm_id Missing", "success": False})
+
+    try:
+        bank_name = request.form['bank_name']
+        if (bank_name == None):
+            return jsonify({"msg": "bank_name Missing", "success": False})
+    except:
+        return jsonify({"msg": "bank_name Missing", "success": False})
+
+    try:
+        bank_owner_name = request.form['bank_owner_name']
+        if (bank_owner_name == None):
+            return jsonify({"msg": "bank_owner_name Missing", "success": False})
+    except:
+        return jsonify({"msg": "bank_owner_name Missing", "success": False})
+
+    try:
+        bank_account_number = request.form['bank_account_number']
+        if (bank_account_number == None):
+            return jsonify({"msg": "bank_account_number Missing", "success": False})
+    except:
+        return jsonify({"msg": "bank_account_number Missing", "success": False})
+
+    try:
+        pic = request.form['pic']
+        if (pic == None):
+            return jsonify({"msg": "pic Missing", "success": False})
+    except:
+        return jsonify({"msg": "pic Missing", "success": False})
+
+    logo_file = request.files.get('logo_file')
+    isLogoEmpty = True;
+
+    if logo_file == None or logo_file.filename == '':
+        isLogoEmpty = True
+    else:
+        isLogoEmpty = False
+        if not allowed_file(logo_file.filename):
+            return jsonify({"msg": "only support jpg, jpeg, png format", "success": False})
+
+        ## Save Image
+        filename = secure_filename(logo_file.filename)
+        modified_filename = f"{randint(1, 999999)}_{filename}"
+        logo_path = os.path.join(LOGO_ROOT, modified_filename)
+        logo_file.save(logo_path)
+
+    if(isLogoEmpty):
+        response = update_data('''
+            UPDATE team SET password=?, english_name=?, address=?, phone_no=?, chinese_name=?, malay_name=?, bank_name=?, 
+            bank_owner_name=?, bank_account_number=?, pic=? WHERE username=?
+        ''', (password, english_name, address, phone_no, chinese_name, malay_name, bank_name, bank_owner_name, bank_account_number,
+              pic, username,))
+    else:
+        response = update_data('''
+                    UPDATE team SET password=?, english_name=?, address=?, phone_no=?, chinese_name=?, malay_name=?, bank_name=?, 
+                    bank_owner_name=?, bank_account_number=?, pic=?, logo_path=? WHERE username=?
+                ''', (password, english_name, address, phone_no, chinese_name, malay_name, bank_name, bank_owner_name,
+                      bank_account_number,
+                      pic, modified_filename, username, ))
+
+    if(response["success"]):
+        return jsonify({"msg": "{} updated successfully".format(username), "success": response["success"]})
     else:
         return jsonify({"msg": response["msg"], "success": response["success"]})
 
@@ -963,7 +1123,7 @@ def volunteer_retrieve_info(username):
             return jsonify({"msg": "Volunteer Not Exist", "success": False})
         js = {
             "username": username,
-            "display_name": response["data"][3],
+            "english_name": response["data"][3],
             "address": response["data"][4],
             "phone_no": response["data"][5],
             "ic": response["data"][6],
@@ -987,7 +1147,7 @@ def user_lst():
                     json = {
                         "username": team[1],
                         "password": team[2],
-                        "display_name": team[3],
+                        "english_name": team[3],
                         "address": team[4],
                         "phone_no": team[5],
                         "volunteer": []
@@ -997,7 +1157,7 @@ def user_lst():
                             js = {
                                 "username": volunteer[1],
                                 "password": volunteer[2],
-                                "display_name": volunteer[3],
+                                "english_name": volunteer[3],
                                 "address": volunteer[4],
                                 "phone_no": volunteer[5],
                                 "ic": volunteer[6]
@@ -1107,6 +1267,46 @@ def donation_list():
         return jsonify({"data": main_list, "success": True})
     else:
         return jsonify({"msg": "Database Error", "error_msg": response["error_msg"], "success": False})
+
+@app.route('/certificate/<string:username>', methods=["GET"])
+def get_certificate_details(username):
+    res = select_one_data("SELECT * FROM team JOIN volunteer ON volunteer.team=team.username WHERE volunteer.username=?", (username,))
+    if(res["success"]):
+        if(res["data"] is not None):
+            js = {
+                "team_pic": res["data"][13],
+                "team_chinese_name": res["data"][7],
+                "team_english_name": res["data"][7],
+                "team_malay_name": res["data"][8],
+                "team_contact_number": res["data"][5],
+                "team_address": res["data"][4],
+                "volunteer_username": res["data"][15],
+                "volunteer_english_name": res["data"][17],
+                "volunteer_ic": res["data"][20],
+            }
+            return jsonify({"data": js, "success": True })
+        else:
+            return jsonify({"msg": "Invalid Volunteeer Username", "success": False})
+
+@app.route('/icon/team/<string:username>', methods=["GET"])
+def download_team_icon(username):
+    res = select_one_data("SELECT * FROM team WHERE username=?", (username,))
+    if(res["success"]):
+        if(res["data"] != None):
+            filename = res["data"][6]
+        else:
+            return jsonify({"msg": "invalid username", "success": False})
+    return send_from_directory(LOGO_ROOT, filename, as_attachment=False)
+
+@app.route('/icon/volunteer/<string:username>', methods=["GET"])
+def download_volunteer_icon(username):
+    res = select_one_data("SELECT * FROM volunteer WHERE username=?", (username,))
+    if(res["success"]):
+        if(res["data"] != None):
+            filename = res["data"][8]
+        else:
+            return jsonify({"msg": "invalid username", "success": False})
+    return send_from_directory(LOGO_ROOT, filename, as_attachment=False)
 
 @app.route("/health", methods=["GET"])
 #@jwt_required()
