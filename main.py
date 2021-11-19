@@ -20,6 +20,9 @@ from email.mime.text import MIMEText
 from fpdf import FPDF
 import subprocess
 
+from datetime import date
+from dateutil.relativedelta import relativedelta
+
 app = Flask(__name__)
 CORS(app)
 app.config['CORS_HEADERS'] = 'Content-Type'
@@ -1108,7 +1111,9 @@ def team_retrieve_info(username):
             "team_ssm_id": response["data"][9],
             "bank_name": response["data"][10],
             "bank_owner_name": response["data"][11],
-            "bank_account_number": response["data"][12]
+            "bank_account_number": response["data"][12],
+            "pic": response["data"][13],
+            "password": response["data"][2],
         }
         return jsonify({"data": js, "success": True})
     else:
@@ -1127,7 +1132,8 @@ def volunteer_retrieve_info(username):
             "address": response["data"][4],
             "phone_no": response["data"][5],
             "ic": response["data"][6],
-            "team": response["data"][7]
+            "team": response["data"][7],
+            "password": response["data"][2]
         }
         return jsonify({"data": js, "success": True})
     else:
@@ -1273,10 +1279,15 @@ def get_certificate_details(username):
     res = select_one_data("SELECT * FROM team JOIN volunteer ON volunteer.team=team.username WHERE volunteer.username=?", (username,))
     if(res["success"]):
         if(res["data"] is not None):
+            start_date = date.today() + relativedelta(months=-2)
+            end_date = date.today() + relativedelta(months=+2)
             js = {
+                "start_date": str(start_date),
+                "end_date": str(end_date),
+                "team_username": res["data"][1],
                 "team_pic": res["data"][13],
                 "team_chinese_name": res["data"][7],
-                "team_english_name": res["data"][7],
+                "team_english_name": res["data"][3],
                 "team_malay_name": res["data"][8],
                 "team_contact_number": res["data"][5],
                 "team_address": res["data"][4],
