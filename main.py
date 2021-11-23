@@ -163,7 +163,7 @@ def generate_pdf(data):
     pdf.set_margins(0, 0, 0)
     pdf.ln(3.75)
     pdf.rect(0.25, 3.75, 7.75, 4)
-    pdf.image(os.path.join(LOGO_ROOT, data["logo_relative_path"]), 0.75, 4, 1)
+    pdf.image(os.path.join(LOGO_ROOT, 'main.png'), 0.75, 4, 1)
     pdf.set_font('Times', 'B', 4)
     pdf.ln(0.85)
     pdf.cell(0.925)
@@ -173,24 +173,28 @@ def generate_pdf(data):
     pdf.ln(-0.775)
     pdf.set_font('Simsun', '', 15)
     pdf.cell(1.875)
-    pdf.cell(0, 0, f"{data['team_chinese_name']}", 0)
+    pdf.cell(0, 0, f"孝心老人福利收留协会", 0)
     pdf.set_font('Helvetica', '', 12)
     pdf.ln(0.225)
     pdf.cell(1.875)
-    pdf.cell(0, 0, f"{data['team_english_name']}", 0)
+    pdf.cell(0, 0, f"XIAO XIN SERDANG OLD FOLKS HOME", 0)
     pdf.set_font('Helvetica', 'B', 11)
     pdf.ln(0.175)
     pdf.cell(1.875)
-    pdf.cell(0, 0, f"{data['team_malay_name']}", 0)
+    pdf.cell(0, 0, f"PERTUBUHAN KEBAJIKAN ORANG TUA XIAO XIN", 0)
 
     pdf.set_font('Times', '', 7)
     pdf.ln(0.15)
     pdf.cell(1.875)
-    pdf.cell(0, 0, f"{data['team_address']}", 0)
-    pdf.set_font('Helvetica', '', 10)
+    pdf.cell(0, 0, f"NO 1687, JALAN 18/46 TAMAN SRI SEDANG, 43300 SERI KEMBANGAN, SELANGOR", 0)
+    pdf.set_font('Helvetica', '', 7)
     pdf.ln(0.15)
     pdf.cell(1.875)
-    pdf.cell(0, 0, f"Contact: {data['team_phone_no']}", 0)
+    pdf.cell(0, 0, f"Contact: +6016-4738115 (LK)/+6016-8851687 (YT)    Volunteer: xxxxxxx", 0)
+
+    # pdf.ln(0.15)
+    # pdf.cell(1.875)
+    # pdf.cell(0, 0, f"VOLUNTEER", 0)
 
     pdf.set_font('Simsun', '', 11)
     pdf.ln(-0.7)
@@ -1256,7 +1260,8 @@ def team_donation_list():
 #@jwt_required()
 def donation_list():
     main_list = []
-    response = select_all_data("SELECT * FROM report")
+    response = select_all_data("SELECT * FROM report JOIN volunteer WHERE report.username = volunteer.username")
+    print(response)
     if(response["success"]):
         if(response["data"] == None):
             return jsonify({"data": [], "success": True})
@@ -1267,7 +1272,8 @@ def donation_list():
                 "customer_name": details[2],
                 "amount": details[3],
                 "description": f"{'Cash, ' if details[10] == 1 else ''}{'Medicine, ' if details[11] == 1 else ''}{'Coffin' if details[12] == 1 else ''}",
-                "username": details[4]
+                "username": details[4],
+                "team": details[22]
             }
             main_list.append(js)
         return jsonify({"data": main_list, "success": True})
@@ -1308,6 +1314,10 @@ def download_team_icon(username):
         else:
             return jsonify({"msg": "invalid username", "success": False})
     return send_from_directory(LOGO_ROOT, filename, as_attachment=False)
+
+@app.route('/icon/team/main', methods=["GET"])
+def download_team_icon_main():
+    return send_from_directory(LOGO_ROOT, 'main_white.png', as_attachment=False)
 
 @app.route('/icon/volunteer/<string:username>', methods=["GET"])
 def download_volunteer_icon(username):
