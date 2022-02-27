@@ -10,7 +10,7 @@ from flask_jwt_extended import JWTManager
 import sqlite3
 from werkzeug.utils import secure_filename
 from datetime import datetime, timedelta
-
+from random import randint
 import smtplib
 from email.message import EmailMessage
 from email.mime.application import MIMEApplication
@@ -44,8 +44,6 @@ LOGO_ROOT = "logo"
 FONT_PATH = 'font/unifont/'
 PDF_PATH = "pdf"
 ASSEST_PATH = "assest"
-
-from random import randint
 
 ## Email
 def send_smail(data, pdf_output_path):
@@ -88,6 +86,7 @@ def insert_data(sql, value = None):
         print(e)
         return {"msg": "Data Inserted Failed", "success": False, "error_msg": str(e)}
 
+
 def select_all_data(sql, value = None):
     try:
         conn = sqlite3.connect(DATABASE_PATH)
@@ -102,6 +101,7 @@ def select_all_data(sql, value = None):
     except Exception as e:
         print(e)
         return {"msg": "Data Retrieve Failed", "success": False, "error_msg": str(e)}
+
 
 def select_one_data(sql, value = None):
     try:
@@ -118,6 +118,7 @@ def select_one_data(sql, value = None):
         print(e)
         return {"msg": "Data Retrieve Failed", "success": False, "error_msg": str(e)}
 
+
 def update_data(sql, value):
     try:
         conn = sqlite3.connect(DATABASE_PATH)
@@ -130,17 +131,19 @@ def update_data(sql, value):
         print(e)
         return {"msg": "Data Update Failed", "success": False, "error_msg": str(e)}
 
-def delete_data(sql):
+
+def delete_data(sql, value):
     try:
         conn = sqlite3.connect(DATABASE_PATH)
         cur = conn.cursor()
-        cur.execute(sql)
+        cur.execute(sql, value)
         conn.commit()
         conn.close()
         return {"msg": "Data Deleted Successfully", "success": True, "error_msg": ""}
     except Exception as e:
         print(e)
         return {"msg": "Data Delete Failed", "success": False, "error_msg": str(e)}
+
 
 def allowed_file(filename):
     return '.' in filename and \
@@ -167,7 +170,7 @@ def generate_pdf(data):
     pdf.set_font('Times', 'B', 4)
     pdf.ln(0.85)
     pdf.cell(0.925)
-    pdf.cell(0, 0, f"{data['team_ssv_id']}", 0)
+    pdf.cell(0, 0, f"", 0)
 
     # Header
     pdf.ln(-0.775)
@@ -190,18 +193,18 @@ def generate_pdf(data):
     pdf.set_font('Helvetica', '', 7)
     pdf.ln(0.15)
     pdf.cell(1.875)
-    pdf.cell(0, 0, f"Contact: +6016-4738115 (LK)/+6016-8851687 (YT)    Volunteer: xxxxxxx", 0)
+    pdf.cell(0, 0, f"Contact: +6016-4738115 (LK)/+6016-8851687 (YT)", 0)
 
-    # pdf.ln(0.15)
-    # pdf.cell(1.875)
-    # pdf.cell(0, 0, f"VOLUNTEER", 0)
+    pdf.ln(0.10)
+    pdf.cell(1.875)
+    pdf.cell(0, 0, f"Volunteer: {data['username']}", 0)
 
     pdf.set_font('Simsun', '', 11)
     pdf.ln(-0.7)
     pdf.cell(6.275)
     pdf.cell(0, 0, response["data"][0], 0)
     pdf.set_font('Times', '', 10)
-    pdf.ln(0.175)
+    pdf.ln(0.115)
     pdf.cell(6)
     pdf.cell(0, 0, "OFFICIAL RECEIPT", 0)
     pdf.line(6, 4.5, 7.25, 4.5)
@@ -216,7 +219,7 @@ def generate_pdf(data):
     pdf.cell(1)
     pdf.cell(0, 0, response["data"][1], 0)
     pdf.set_font('Times', '', 10)
-    pdf.ln(0.175)
+    pdf.ln(0.135)
     pdf.cell(1)
     pdf.cell(0, 0, f"NAME : {data['customer_name']}", 0)
     pdf.line(1.575, 5.5, 7.25, 5.5)
@@ -305,7 +308,7 @@ def generate_pdf(data):
     pdf.ln(0.175)
     pdf.cell(4.125)
     pdf.set_font('Times', '', 12)
-    pdf.cell(0, 0, "Received By : LK", 0)
+    pdf.cell(0, 0, "Received By : YT Ong", 0)
     pdf.line(5.125, 7.4, 7.25, 7.4)
 
     # Date
@@ -595,9 +598,9 @@ def donation_team():
             "team_chinese_name": team_chinese_name,
             "team_malay_name": team_malay_name,
             "team_ssv_id": team_ssv_id,
-            "bank_name": bank_name,
-            "bank_owner_name": bank_owner_name,
-            "bank_account_number": bank_account_number,
+            "bank_name": "Ambank",
+            "bank_owner_name": "Pertubuhan Kebajikan Orang Tua Xiao Xin ",
+            "bank_account_number": "8881034592429 ",
             "donation_date": donation_date,
             "customer_name": customer_name,
             "amount": amount,
@@ -1060,6 +1063,7 @@ def team_edit():
     else:
         return jsonify({"msg": response["msg"], "success": response["success"]})
 
+
 @app.route("/login", methods=["POST"])
 def login():
     try:
@@ -1098,6 +1102,7 @@ def login():
 
     return jsonify({"msg": "Invalid username or password"}), 401
 
+
 @app.route("/team/<username>", methods=["GET"])
 #@jwt_required()
 def team_retrieve_info(username):
@@ -1123,6 +1128,7 @@ def team_retrieve_info(username):
     else:
         return jsonify({"msg": "Database Error", "error_msg": response["error_msg"], "success": False})
 
+
 @app.route("/volunteer/<username>", methods=["GET"])
 #@jwt_required()
 def volunteer_retrieve_info(username):
@@ -1142,6 +1148,7 @@ def volunteer_retrieve_info(username):
         return jsonify({"data": js, "success": True})
     else:
         return jsonify({"msg": "Database Error", "error_msg": response["error_msg"], "success": False})
+
 
 @app.route("/user-list", methods=["GET"])
 #@jwt_required()
@@ -1182,6 +1189,7 @@ def user_lst():
     else:
         return jsonify({"msg": "Database Error", "error_msg": response_team["error_msg"], "success": False})
 
+
 @app.route("/donation-list/volunteer", methods=["GET"])
 #@jwt_required()
 def volunteer_donation_list():
@@ -1218,6 +1226,7 @@ def volunteer_donation_list():
                 return jsonify({"msg": "Database Error", "error_msg": response["error_msg"], "success": False})
     else:
         return jsonify({"msg": "Database Error", "error_msg": response["error_msg"], "success": False})
+
 
 @app.route("/donation-list/team", methods=["GET"])
 #@jwt_required()
@@ -1333,6 +1342,27 @@ def download_volunteer_icon(username):
 #@jwt_required()
 def test():
     return "Connection Established!"
+
+
+@app.route("/volunteer/delete", methods=["POST"])
+def delete_volunteer():
+    username = request.json.get("username", None)
+    res = delete_data("DELETE FROM volunteer WHERE username=?", (username,))
+    if (res["success"]):
+        return jsonify({"msg": "Volunteer Deleted", "success": True})
+    else:
+        return jsonify({"msg": "Database Error", "error_msg": res["error_msg"], "success": False})
+
+
+@app.route("/team/delete", methods=["POST"])
+def delete_team():
+    username = request.json.get("username", None)
+    res = delete_data("DELETE FROM team WHERE username=?", (username,))
+    if (res["success"]):
+        return jsonify({"msg": "Team Deleted", "success": True})
+    else:
+        return jsonify({"msg": "Database Error", "error_msg": res["error_msg"], "success": False})
+
 
 if __name__ == "__main__":
     app.run(debug=True)
