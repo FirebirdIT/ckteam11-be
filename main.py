@@ -176,7 +176,7 @@ def generate_pdf(data):
     pdf.ln(-0.775)
     pdf.set_font('Simsun', '', 15)
     pdf.cell(1.875)
-    pdf.cell(0, 0, f"孝心老人福利收留协会", 0)
+    pdf.cell(0, 0, response["data"][8], 0)
     pdf.set_font('Helvetica', '', 12)
     pdf.ln(0.225)
     pdf.cell(1.875)
@@ -282,10 +282,10 @@ def generate_pdf(data):
     pdf.cell(0, 0, "Bank Account", 0)
     pdf.ln(0.15)
     pdf.cell(4.575)
-    pdf.cell(0, 0, f"{data['bank_owner_name']}", 0)
+    pdf.cell(0, 0, f"Pertubuhan Kebajikan Orang Tua Xiao Xin ", 0)
     pdf.ln(0.15)
     pdf.cell(4.575)
-    pdf.cell(0, 0, f"{data['bank_name']} - {data['bank_account_number']}", 0)
+    pdf.cell(0, 0, f"Ambank - 8881034592429", 0)
 
     # Amount
     pdf.ln(-0.02)
@@ -416,8 +416,8 @@ def donation_volunteer():
         recipe_no = randint(100000, 199999)
 
     response = insert_data('''
-            INSERT INTO report(datetime,customer_name,amount,username, email, role, donation_type, cheque_no, recipe_no, cash_donation, coffin, medicine,cust_phone_no)VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)
-        ''', (donation_date, customer_name, amount, username, email, "volunteer", donation_type, cheque_no, recipe_no, cash_donation, coffin, medicine,cust_phone_no))
+            INSERT INTO report(datetime,customer_name,amount,username, email, role, donation_type, cheque_no, recipe_no, cash_donation, coffin, medicine,cust_phone_no, team)VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+        ''', (donation_date, customer_name, amount, username, email, "volunteer", donation_type, cheque_no, recipe_no, cash_donation, coffin, medicine,cust_phone_no,""))
 
     if(response["success"]):
         res = select_one_data("SELECT * FROM volunteer WHERE username=?", (username,))
@@ -473,7 +473,7 @@ def donation_volunteer():
         pdf_output_path, pdf_name = generate_pdf(js)
         send_smail(js, pdf_output_path)
 
-        res = update_data("UPDATE report SET pdf_path=? WHERE datetime=? AND customer_name=? AND amount=?", (pdf_name,donation_date, customer_name, amount,))
+        res = update_data("UPDATE report SET pdf_path=?, team=? WHERE datetime=? AND customer_name=? AND amount=?", (pdf_name,selected_team,donation_date, customer_name, amount,))
         if(res["success"]):
             return jsonify({"msg": "Record Successfully & Email Sent", "success": response["success"]})
         else:
@@ -567,8 +567,8 @@ def donation_team():
         recipe_no = randint(100000, 199999)
 
     response = insert_data('''
-            INSERT INTO report(datetime,customer_name,amount,username, email, role, donation_type, cheque_no, recipe_no, cash_donation, coffin, medicine,cust_phone_no)VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)
-        ''', (donation_date, customer_name, amount, username, email, "team", donation_type, cheque_no, recipe_no, cash_donation, coffin, medicine,cust_phone_no))
+            INSERT INTO report(datetime,customer_name,amount,username, email, role, donation_type, cheque_no, recipe_no, cash_donation, coffin, medicine,cust_phone_no,team)VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+        ''', (donation_date, customer_name, amount, username, email, "team", donation_type, cheque_no, recipe_no, cash_donation, coffin, medicine,cust_phone_no, username))
 
     if(response["success"]):
         res = select_one_data("SELECT * FROM team WHERE username=?", (username,))
@@ -1241,7 +1241,7 @@ def team_donation_list():
 
             sql = ""
             for vol in team_list:
-                sql += f" username='{vol}' OR "
+                sql += f" username='{vol}' OR team='{vol}' OR "
             response = select_all_data(
                 f"SELECT * FROM report WHERE {sql[1:-3]}")
 
@@ -1254,7 +1254,8 @@ def team_donation_list():
                             "customer_name": details[2],
                             "amount": details[3],
                             "description": f"{'Cash, ' if details[10] == 1 else ''}{'Medicine, ' if details[11] == 1 else ''}{'Coffin' if details[12] == 1 else ''}",
-                            "username": details[4]
+                            "username": details[4],
+                            "team": details[15]
                         }
                         main_list.append(js)
                     return jsonify({"msg": "Data Retrieve Successfully", "data": main_list, "success": True})
@@ -1269,7 +1270,7 @@ def team_donation_list():
 #@jwt_required()
 def donation_list():
     main_list = []
-    response = select_all_data("SELECT * FROM report JOIN volunteer WHERE report.username = volunteer.username")
+    response = select_all_data("SELECT * FROM report")
     print(response)
     if(response["success"]):
         if(response["data"] == None):
@@ -1282,7 +1283,7 @@ def donation_list():
                 "amount": details[3],
                 "description": f"{'Cash, ' if details[10] == 1 else ''}{'Medicine, ' if details[11] == 1 else ''}{'Coffin' if details[12] == 1 else ''}",
                 "username": details[4],
-                "team": details[22]
+                "team": details[15]
             }
             main_list.append(js)
         return jsonify({"data": main_list, "success": True})
@@ -1362,6 +1363,85 @@ def delete_team():
         return jsonify({"msg": "Team Deleted", "success": True})
     else:
         return jsonify({"msg": "Database Error", "error_msg": res["error_msg"], "success": False})
+
+
+@app.route("/report/volunteer", methods=["POST"])
+def report_volunteer():
+    username = request.json.get("username", None)
+    before_date = request.json.get("before_date", None)
+    after_date = request.json.get("after_date", None)
+    response = select_all_data("SELECT * FROM report WHERE username=? AND datetime BETWEEN ? AND ?", (username,after_date,before_date))
+    if (response["success"]):
+        data_to_return = {}
+        data_to_return["id"] = 1
+        data_to_return["username"] = username
+        data_to_return["amount"] = 0
+        data_to_return["start"] = after_date
+        data_to_return["end"] = before_date
+        if (response["data"] == None):
+            return jsonify({"data": data_to_return, "success": True})
+        for details in response["data"]:
+            data_to_return["amount"] += float(details[3])
+        return jsonify({"data": data_to_return, "success": True})
+    else:
+        return jsonify({"msg": "Database Error", "error_msg": response["error_msg"], "success": False})
+
+
+@app.route("/report/team", methods=["POST"])
+def report_team():
+    username = request.json.get("username", None)
+    before_date = request.json.get("before_date", None)
+    after_date = request.json.get("after_date", None)
+    response = select_all_data("SELECT * FROM report WHERE username=? AND datetime BETWEEN ? AND ?", (username,after_date,before_date))
+    if (response["success"]):
+        data_to_return = {}
+        data_to_return["username"] = username
+        data_to_return["start"] = after_date
+        data_to_return["end"] = before_date
+        data_to_return["amount"] = 0
+        if (response["data"] == None):
+            return jsonify({"data": data_to_return, "success": True})
+        for details in response["data"]:
+            data_to_return["amount"] += float(details[3])
+        return jsonify({"data": data_to_return, "success": True})
+    else:
+        return jsonify({"msg": "Database Error", "error_msg": response["error_msg"], "success": False})
+
+
+@app.route("/user/list", methods=["GET"])
+#@jwt_required()
+def list_user():
+    data_to_return = []
+    response = select_all_data("SELECT * FROM volunteer")
+    if (response["success"]):
+        if (response["data"] != None):
+            for details in response["data"]:
+                data_to_return.append({
+                    "username": details[1],
+                })
+            return jsonify({"data": data_to_return, "success": True})
+        else:
+            return jsonify({"data": data_to_return, "success": True})
+    else:
+        return jsonify({"msg": "Database Error", "error_msg": response["error_msg"], "success": False})
+
+
+@app.route("/team/list", methods=["GET"])
+#@jwt_required()
+def list_team():
+    data_to_return = []
+    response = select_all_data("SELECT * FROM team")
+    if (response["success"]):
+        if (response["data"] != None):
+            for details in response["data"]:
+                data_to_return.append({
+                    "username": details[1],
+                })
+            return jsonify({"data": data_to_return, "success": True})
+        else:
+            return jsonify({"data": data_to_return, "success": True})
+    else:
+        return jsonify({"msg": "Database Error", "error_msg": response["error_msg"], "success": False})
 
 
 if __name__ == "__main__":
