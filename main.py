@@ -62,7 +62,7 @@ def send_smail(data, pdf_output_path):
     attach.add_header('Content-Disposition', 'attachment', filename=str(filename))
     msg.attach(attach)
     server = smtplib.SMTP_SSL('smtp.gmail.com', 465)
-    server.login("chrisliang183@gmail.com", "Hansheng0512#")
+    server.login("xiaoxinserdang@gmail.com", "BN9CY2N4HN")
     try:
         server.send_message(msg)
         server.quit()
